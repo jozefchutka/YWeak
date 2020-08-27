@@ -1,0 +1,11 @@
+{
+	"name": "yweak",
+	"license": "MIT",
+	"tags": ["javascript", "weakmap", "iterable"],
+	"description": "Advanced weak reference objects for JavaScript.",
+	"contributors": ["jozefchutka"],
+	"releasenote": "",
+	"version": "snapshot",
+	"url": "https://github.com/jozefchutka/iterableweakmap",
+	"dependencies": {}
+}

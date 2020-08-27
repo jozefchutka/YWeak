@@ -1,0 +1,34 @@
+{
+	"variables":
+	[
+		{
+			"name":"sourceDirectory",
+			"value":"src/main/haxe"
+		},
+		{
+			"name":"testSourceDirectory",
+			"value":"src/test/haxe"
+		},
+		{
+			"name":"testOutputDirectory",
+			"value":"bin/test"
+		}
+	],
+	
+	"tests":
+	[
+		{
+			"name": "test",
+			"command": "haxe",
+			"arguments":
+			[
+				"--class-path", "${variable:sourceDirectory}",
+				"--class-path", "${variable:testSourceDirectory}",
+				"--main", "Main.hx",
+				"-dce", "full",
+				"-D", "js-es=6",
+				"--js", "${variable:testOutputDirectory}/main.js"
+			]
+		}
+	]
+}
