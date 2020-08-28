@@ -9,9 +9,9 @@ Inspired by:
 - [IterableWeakMap.js](https://github.com/tc39/proposal-weakrefs)
 - [ES6 Symbol.iterator in haxe](https://git.belin.io/cedx/webstorage.hx/src/branch/main/src/webstorage/WebStorage.hx)
 
-## Classes
+## Implementations
 
-### IterableWeakMap
+### [IterableWeakMap](src/main/haxe/yweak/IterableWeakMap.hx)
 
 Usage:
 ```
@@ -36,7 +36,7 @@ map.find(...) // can be halted
 ```
 
 
-### IterableWeakSet
+### [IterableWeakSet](src/main/haxe/yweak/IterableWeakSet.hx)
 
 Usage:
 ```
@@ -57,4 +57,11 @@ set.find(...) // can be halted
 
 ## Test
 
-Primitive unit test are available to run in browser console. Execute `haxe text.hxml` and open [src/test/resources/index.html](src/test/resources/index.html) in browser.
+Primitive unit tests are available to run in browser console. Execute `haxe text.hxml` and open [src/test/resources/index.html](src/test/resources/index.html) in browser.
+
+## Release
+
+1. update version in [haxelib.json](src/main/haxe/haxelib.json)
+2. commit
+3. navigate to `src/main/haxe`
+3. execute `haxelib submit` , enter package "." if requested

@@ -5,7 +5,7 @@
 	"description": "Advanced weak reference objects for JavaScript.",
 	"contributors": ["jozefchutka"],
 	"releasenote": "",
-	"version": "snapshot",
-	"url": "https://github.com/jozefchutka/iterableweakmap",
+	"version": "0.0.1",
+	"url": "https://github.com/jozefchutka/YWeak",
 	"dependencies": {}
 }
