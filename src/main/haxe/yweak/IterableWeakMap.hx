@@ -9,20 +9,6 @@ import js.lib.Symbol;
 import js.lib.WeakMap;
 import js.Syntax;
 
-/**
-  Utilizes WeakRef object to enable iteration with weak reference map.
-  
-  Inspired by:
-  IterableWeakSet.js
-  https://gist.github.com/seanlinsley/bc10378fd311d75cf6b5e80394be813d
-  
-  IterableWeakMap.js
-  https://github.com/tc39/proposal-weakrefs
- 
-  ES6 Symbol.iterator in haxe
-  https://git.belin.io/cedx/webstorage.hx/src/branch/main/src/webstorage/WebStorage.hx
-**/
-
 @:expose("IterableWeakMap") class IterableWeakMap<K:{}, V>
 {
 	var weakMap:WeakMap<{ref:WeakRef<K>, value:V}> = new WeakMap();
@@ -75,28 +61,18 @@ import js.Syntax;
 		weakMap = new WeakMap();
 	}
 
-	/**
-	  Function content is declared on prototype (inside `__init__()`)
-	**/
-	public function keys():Iterator<K>
-	{
-		return null;
-	}
+	/** Function content is declared on prototype (inside `__init__()`) **/
+	public function keys():Iterator<K> return null;
 	
-	/**
-	  Function content is declared on prototype (inside `__init__()`)
-	**/
-	public function values():Iterator<V>
-	{
-		return null;
-	}
+	/** Function content is declared on prototype (inside `__init__()`) **/
+	public function values():Iterator<V> return null;
 	
-	/**
-	  Function content is declared on prototype (inside `__init__()`)
-	**/
-	public function entries():Iterator<KeyValue<K, V>>
+	/** Function content is declared on prototype (inside `__init__()`) **/
+	public function entries():Iterator<KeyValue<K, V>> return null;
+	
+	public function keyIterator():HaxeIterator<K>
 	{
-		return null;
+		return new HaxeIterator(keys());
 	}
 	
 	public function iterator():HaxeIterator<V>
@@ -111,51 +87,34 @@ import js.Syntax;
 	
 	public function forEach(callback:(value:V,key:K,map:IterableWeakMap<K,V>)->Void)
 	{
-		for (key => value in this)
-			callback(value, key, this);
+		Syntax.code("for(const [key, value] of {0}){1}(value, key, {0});", this, callback);
 	}
 	
-	public function find(callback:(value:V,key:K,map:IterableWeakMap<K,V>)->Bool)
+	public function find(callback:(value:V,key:K,map:IterableWeakMap<K,V>)->Bool):K
 	{
-		for (key => value in this)
-			if (callback(value, key, this))
-				break;
+		Syntax.code("for(const [key, value] of {0})if({1}(value, key, {0}))return key;", this, callback);
+		return null;
 	}
 	
-	public function toString()
-	{
-		var result = "{";
-		for (key => value in this)
-			result += Std.string(key) + " => " + Std.string(value) + ", ";
-		return result + "}";
-	}
-	
-	/**
-	  Removes empty WeakRef-s from reference set.
-	**/
+	/** Removes empty WeakRef-s from reference set. **/
 	public function optimize()
 	{
-		for (ref in refSet)
-			if(ref.deref() == null)
-				refSet.delete(ref);
-		//Syntax.code("for(const ref of {0})if(!ref.deref()){0}.delete(ref);", refSet);
+		Syntax.code("for(const ref of {0})if(!ref.deref()){0}.delete(ref);", refSet);
 	}
 	
-	/**
-	  Provides ES6 iteration and key/value/entries array generators on prototype.
-	**/
+	/** Declares ES6 iteration and key/value/entries array generators on prototype. **/
 	static function __init__()
 	{
 		final proto = Syntax.field(IterableWeakMap, "prototype");
 		
 		Object.defineProperty(proto, Syntax.field(Symbol, "iterator"), {
-			value: Syntax.code("function *(){for(const ref of this.refSet){const key=ref.deref();if(!key)continue;yield [key,this.get(key)];};}")});
+			value: Syntax.code("function *(){for(const ref of this.refSet){const key=ref.deref();if(key)yield [key,this.get(key)];};}")});
 			
 		Object.defineProperty(proto, "keys", {
-			value: Syntax.code("function *(){for(const ref of this.refSet){const key=ref.deref();if(!key)continue;yield key;};}")});
+			value: Syntax.code("function *(){for(const ref of this.refSet){const key=ref.deref();if(key)yield key;};}")});
 	
 		Object.defineProperty(proto, "values", {
-			value: Syntax.code("function *(){for(const ref of this.refSet){const key=ref.deref();if(!key)continue;yield this.get(key);};}")});
+			value: Syntax.code("function *(){for(const ref of this.refSet){const key=ref.deref();if(key)yield this.get(key);};}")});
 		
 		Object.defineProperty(proto, "entries", {
 			value: Syntax.code("function (){return this[Symbol.iterator]();}")});

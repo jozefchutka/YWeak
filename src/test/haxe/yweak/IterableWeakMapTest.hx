@@ -16,6 +16,7 @@ class IterableWeakMapTest
 		test.testKeys();
 		test.testValues();
 		test.testEntries();
+		test.testKeyIterator();
 		test.testIterator();
 		test.testKeyValueIterator();
 		test.testForEach();
@@ -183,6 +184,28 @@ class IterableWeakMapTest
 		assert(values[2].value == "4");
 	}
 	
+	function testKeyIterator()
+	{
+		trace("testKeyIterator");
+		final k1 = new MyKey("1");
+		final k2 = new MyKey("2");
+		final k3 = new MyKey("3");
+		final k4 = new MyKey("4");
+		final map = new IterableWeakMap<MyKey, String>();
+		map.set(k1, "1");
+		map.set(k2, "2");
+		map.set(k3, "3");
+		map.set(k4, "4");
+		map.delete(k2);
+		final keys = [];
+		for(key in map.keyIterator())
+			keys.push(key);
+		assert(keys.contains(k1));
+		assert(!keys.contains(k2));
+		assert(keys.contains(k3));
+		assert(keys.contains(k4));
+	}
+	
 	function testIterator()
 	{
 		trace("testIterator");
@@ -267,7 +290,7 @@ class IterableWeakMapTest
 		map.set(k3, "3");
 		map.set(k4, "4");
 		final values:Array<String> = [];
-		map.find(function(value, key, map){
+		final result = map.find(function(value, key, map){
 			assert(key.name == value);
 			values.push(value);
 			return value == "3";
@@ -276,6 +299,7 @@ class IterableWeakMapTest
 		assert(values[0] == "1");
 		assert(values[1] == "2");
 		assert(values[2] == "3");
+		assert(result == k3);
 	}
 	
 	function testWeakness()
