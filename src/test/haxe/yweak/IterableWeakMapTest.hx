@@ -10,8 +10,8 @@ class IterableWeakMapTest
 	{
 		final test = new IterableWeakMapTest();
 		test.testSetGetHas();
+		test.testSize();
 		test.testDelete();
-		test.testCopy();
 		test.testClear();
 		test.testKeys();
 		test.testValues();
@@ -59,6 +59,23 @@ class IterableWeakMapTest
 		assert(!map2.has(k3));
 	}
 	
+	function testSize()
+	{
+		trace("testSize");
+		final k1 = new MyKey("1");
+		final k2 = new MyKey("2");
+		final k3 = new MyKey("3");
+		final map = new IterableWeakMap<MyKey, String>();
+		map.set(k1, "1");
+		map.set(k2, "2");
+		map.set(k3, "3");
+		assert(map.size == 3);
+		map.delete(k2);
+		assert(map.size == 2);
+		map.clear();
+		assert(map.size == 0);
+	}
+	
 	function testDelete()
 	{
 		trace("testDelete");
@@ -74,23 +91,6 @@ class IterableWeakMapTest
 		assert(!map.has(k1));
 		assert(map.has(k2));
 		assert(!map.has(k3));
-	}
-	
-	function testCopy()
-	{
-		trace("testCopy");
-		final k1 = new MyKey("1");
-		final k2 = new MyKey("2");
-		final k3 = new MyKey("3");
-		final map = new IterableWeakMap<MyKey, String>();
-		map.set(k1, "1");
-		map.set(k2, "2");
-		map.set(k3, "3");
-		map.delete(k3);
-		final copy = map.copy();
-		assert(copy.has(k1));
-		assert(copy.has(k2));
-		assert(!copy.has(k3));
 	}
 	
 	function testClear()
@@ -313,15 +313,21 @@ class IterableWeakMapTest
 			map.set(k2, "2");
 		}
 		init();
+		final k3 = new MyKey("2");
+		map.set(k3, "2");
 		final values:Dynamic = Syntax.code("[...{0}()]", map.values);
-		assert(values.length == 2);
+		assert(values.length == 3);
+		assert(values.length == map.size);
 		final timer = new haxe.Timer(1000);
 		timer.run = function(){
+			final keepK3 = k3; // hopefully k3 will not get GCed
 			final values:Dynamic = Syntax.code("[...{0}()]", map.values);
 			final count = values.length;
-			if(count == 2)
+			if(count == 3)
 				return trace("testWeakness: Waiting for GC. Enforce GC via dev tools.");
-			assert(count == 0);
+			trace("testOptimize timer");
+			assert(count == 1);
+			assert(map.size == count);
 			timer.stop();
 		};
 	}
@@ -350,6 +356,7 @@ class IterableWeakMapTest
 			final after = map.refSetCount();
 			if(before == 4 && after == 4)
 				return trace("testOptimize: Waiting for GC. Enforce GC via dev tools.");
+			trace("testOptimize timer");
 			assert(before == 4 && after == 0);
 			timer.stop();
 		};

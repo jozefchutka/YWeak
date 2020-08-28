@@ -11,14 +11,19 @@ import js.Syntax;
 
 @:expose("IterableWeakMap") class IterableWeakMap<K:{}, V>
 {
-	var weakMap:WeakMap<{ref:WeakRef<K>, value:V}> = new WeakMap();
-	final refSet = new Set();
+	public var size(get, never):Int;
 	
-	public function new(?source:HaxeIterator<KeyValue<K, V>>)
+	var weakMap:WeakMap<{ref:WeakRef<K>, value:V}> = new WeakMap();
+	final refSet:Set<WeakRef<K>> = new Set();
+	
+	public function new()
 	{
-		if (source != null)
-			for (key => value in source)
-				set(key, value);
+	}
+	
+	function get_size()
+	{
+		Syntax.code("let c=0;for(const ref of {0})if(ref.deref())c++;return c;", refSet);
+		return 0;
 	}
 
 	@:keep public function set(key:K, value:V)
@@ -48,11 +53,6 @@ import js.Syntax;
 		weakMap.delete(key);
 		refSet.delete(entry.ref);
 		return true;
-	}
-	
-	public function copy()
-	{
-		return new IterableWeakMap(keyValueIterator());
 	}
 	
 	public function clear()
@@ -105,18 +105,24 @@ import js.Syntax;
 	/** Declares ES6 iteration and key/value/entries array generators on prototype. **/
 	static function __init__()
 	{
-		final proto = Syntax.field(IterableWeakMap, "prototype");
-		
-		Object.defineProperty(proto, Syntax.field(Symbol, "iterator"), {
-			value: Syntax.code("function *(){for(const ref of this.refSet){const key=ref.deref();if(key)yield [key,this.get(key)];};}")});
+		Object.defineProperty(
+			Syntax.field(IterableWeakMap, "prototype"),
+			Syntax.field(Symbol, "iterator"),
+			{value: Syntax.code("function *(){for(const ref of this.refSet){const key=ref.deref();if(key)yield [key,this.get(key)];};}")});
 			
-		Object.defineProperty(proto, "keys", {
-			value: Syntax.code("function *(){for(const ref of this.refSet){const key=ref.deref();if(key)yield key;};}")});
+		Object.defineProperty(
+			Syntax.field(IterableWeakMap, "prototype"),
+			"keys",
+			{value: Syntax.code("function *(){for(const ref of this.refSet){const key=ref.deref();if(key)yield key;};}")});
 	
-		Object.defineProperty(proto, "values", {
-			value: Syntax.code("function *(){for(const ref of this.refSet){const key=ref.deref();if(key)yield this.get(key);};}")});
+		Object.defineProperty(
+			Syntax.field(IterableWeakMap, "prototype"),
+			"values",
+			{value: Syntax.code("function *(){for(const ref of this.refSet){const key=ref.deref();if(key)yield this.get(key);};}")});
 		
-		Object.defineProperty(proto, "entries", {
-			value: Syntax.code("function (){return this[Symbol.iterator]();}")});
+		Object.defineProperty(
+			Syntax.field(IterableWeakMap, "prototype"),
+			"entries",
+			{value: Syntax.code("function (){return this[Symbol.iterator]();}")});
 	}
 }
