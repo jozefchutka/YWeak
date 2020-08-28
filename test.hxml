@@ -1,0 +1,6 @@
+--class-path src/main/haxe
+--class-path src/test/haxe
+--main Main
+-dce full
+-D js-es=6
+--js bin/test/main.js

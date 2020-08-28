@@ -1,7 +1,8 @@
 package yweak;
 
-import haxe.iterators.ArrayIterator;
-import haxe.iterators.MapKeyValueIterator;
+import js.lib.HaxeIterator;
+import js.lib.Iterator;
+import js.lib.KeyValue;
 import js.lib.Object;
 import js.lib.Set;
 import js.lib.Symbol;
@@ -22,15 +23,12 @@ import js.Syntax;
   https://git.belin.io/cedx/webstorage.hx/src/branch/main/src/webstorage/WebStorage.hx
 **/
 
-@:expose("IterableWeakMap") class IterableWeakMap<K:{}, V> implements haxe.Constraints.IMap<K, V>
+@:expose("IterableWeakMap") class IterableWeakMap<K:{}, V>
 {
-	inline static var PROPERTY_KEYS = "_keys";
-	inline static var PROPERTY_VALUES = "_values";
-	
 	var weakMap:WeakMap<{ref:WeakRef<K>, value:V}> = new WeakMap();
 	final refSet = new Set();
 	
-	public function new(?source:KeyValueIterator<K, V>)
+	public function new(?source:HaxeIterator<KeyValue<K, V>>)
 	{
 		if (source != null)
 			for (key => value in source)
@@ -50,12 +48,12 @@ import js.Syntax;
 		return entry != null ? entry.value : null;
 	}
 	
-	public function exists(key:K)
+	public function has(key:K)
 	{
 		return weakMap.get(key) != null;
 	}
 	
-	public function remove(key:K)
+	public function delete(key:K)
 	{
 		final entry = weakMap.get(key);
 		if (entry == null)
@@ -77,40 +75,51 @@ import js.Syntax;
 		weakMap = new WeakMap();
 	}
 
-	public function keys():ArrayIterator<K>
+	/**
+	  Function content is declared on prototype (inside `__init__()`)
+	**/
+	public function keys():Iterator<K>
 	{
-		return new ArrayIterator(Syntax.code("[...{0}[{1}]]", this, PROPERTY_KEYS));
-	}
-	
-	public function values():Array<V>
-	{
-		return Syntax.code("[...{0}[{1}]]", this, PROPERTY_VALUES);
-	}
-	
-	public function iterator()
-	{
-		return new ArrayIterator(values());
-	}
-	
-	public function keyValueIterator()
-	{
-		return new MapKeyValueIterator(this);
+		return null;
 	}
 	
 	/**
-	  Executes native iteration without arbitrary array in process.
+	  Function content is declared on prototype (inside `__init__()`)
 	**/
-	public function forEach(callback:K->V->Void)
+	public function values():Iterator<V>
 	{
-		Syntax.code("for(const ref of {0}){const key=ref.deref();if(key){1}(key, {2}(key))}", refSet, callback, get);
+		return null;
 	}
 	
 	/**
-	  Executes native iteration without arbitrary array in process.
+	  Function content is declared on prototype (inside `__init__()`)
 	**/
-	public function find(callback:K->V->Void)
+	public function entries():Iterator<KeyValue<K, V>>
 	{
-		Syntax.code("for(const ref of {0}){const key=ref.deref();if(key)if({1}(key, {2}(key)))break;}", refSet, callback, get);
+		return null;
+	}
+	
+	public function iterator():HaxeIterator<V>
+	{
+		return new HaxeIterator(values());
+	}
+	
+	public function keyValueIterator():HaxeIterator<KeyValue<K, V>>
+	{
+		return new HaxeIterator(entries());
+	}
+	
+	public function forEach(callback:(value:V,key:K,map:IterableWeakMap<K,V>)->Void)
+	{
+		for (key => value in this)
+			callback(value, key, this);
+	}
+	
+	public function find(callback:(value:V,key:K,map:IterableWeakMap<K,V>)->Bool)
+	{
+		for (key => value in this)
+			if (callback(value, key, this))
+				break;
 	}
 	
 	public function toString()
@@ -126,23 +135,29 @@ import js.Syntax;
 	**/
 	public function optimize()
 	{
-		Syntax.code("for(const ref of {0})if(!ref.deref()){0}.delete(ref);", refSet);
+		for (ref in refSet)
+			if(ref.deref() == null)
+				refSet.delete(ref);
+		//Syntax.code("for(const ref of {0})if(!ref.deref()){0}.delete(ref);", refSet);
 	}
 	
 	/**
-	  Provides ES6 iteration and key/value array generators on prototype.
+	  Provides ES6 iteration and key/value/entries array generators on prototype.
 	**/
 	static function __init__()
 	{
 		final proto = Syntax.field(IterableWeakMap, "prototype");
 		
 		Object.defineProperty(proto, Syntax.field(Symbol, "iterator"), {
+			value: Syntax.code("function *(){for(const ref of this.refSet){const key=ref.deref();if(!key)continue;yield [key,this.get(key)];};}")});
+			
+		Object.defineProperty(proto, "keys", {
 			value: Syntax.code("function *(){for(const ref of this.refSet){const key=ref.deref();if(!key)continue;yield key;};}")});
 	
-		Object.defineProperty(proto, PROPERTY_KEYS, {
-			get: Syntax.code("function *(){for(const key of this)yield key;}")});
-	
-		Object.defineProperty(proto, PROPERTY_VALUES, {
-			get: Syntax.code("function *(){for(const key of this)yield this.get(key);}")});
+		Object.defineProperty(proto, "values", {
+			value: Syntax.code("function *(){for(const ref of this.refSet){const key=ref.deref();if(!key)continue;yield this.get(key);};}")});
+		
+		Object.defineProperty(proto, "entries", {
+			value: Syntax.code("function (){return this[Symbol.iterator]();}")});
 	}
 }
